@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-05-31T17:59:58.079Z",
+  "score": {
+    "value": 9,
+    "grade": "Rest Up",
+    "subs": [
+      {
+        "label": "Strength",
+        "value": 0
+      },
+      {
+        "label": "Activity",
+        "value": 0
+      },
+      {
+        "label": "Consistency",
+        "value": 0
+      },
+      {
+        "label": "Fat Loss",
+        "value": 60
+      }
+    ]
+  },
+  "workout": null,
+  "weight": null,
+  "steps": {
+    "today": 0,
+    "week": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "adjustedTarget": 10000,
+    "baseTarget": 10000,
+    "pct": 0,
+    "message": "Rest day â 100 min walk would hit your target.",
+    "status": "push"
+  },
+  "cycle": {
+    "dayOfCycle": 13,
+    "cycleLength": 36,
+    "periodLength": 2,
+    "phase": "follicular",
+    "onPeriod": false,
+    "phases": {
+      "menstrual": {
+        "start": 1,
+        "end": 2
+      },
+      "follicular": {
+        "start": 3,
+        "end": 20
+      },
+      "ovulation": {
+        "start": 21,
+        "end": 24
+      },
+      "luteal": {
+        "start": 25,
+        "end": 36
+      }
+    }
+  },
+  "phaseRecs": {
+    "menstrual": "Energy and strength may be lower. Prioritise mobility, lighter loads, and recovery. Don't skip â but honour how you feel.",
+    "follicular": "Oestrogen is rising â a good window for progressive overload and heavier lifts. Energy tends to be high.",
+    "ovulation": "Peak strength window. Oestrogen and testosterone are both elevated. Great time to push for PRs and high-intensity sessions.",
+    "luteal": "Progesterone rises here. Strength can feel slightly off later in this phase. Steady volume over max intensity."
+  },
+  "lifts": []
+}

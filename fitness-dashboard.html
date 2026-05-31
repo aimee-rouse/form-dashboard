@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORM — Fitness Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:      #0c0c0e; --surface: #141417; --surface2: #1c1c21;
+    --border:  rgba(255,255,255,0.07); --text: #f0ede8; --muted: #6b6870;
+    --accent:  #e8ff47; --red: #ff5c3a; --green: #3dffa0; --blue: #4dc4ff; --purple: #c084fc;
+  }
+  html { font-size: 16px; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 999; opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 40px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: rgba(12,12,14,0.92);
+    backdrop-filter: blur(12px); z-index: 100;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 4px; color: var(--accent); }
+  .header-date { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .header-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 100px; padding: 7px 16px;
+  }
+  .pill-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .pill-val   { font-family: 'Bebas Neue', sans-serif; font-size: 20px; line-height: 1; color: var(--accent); }
+  .pill-val.cycle { color: var(--purple); }
+
+  /* WEIGHT UNIT TOGGLE */
+  .unit-toggle { display: flex; gap: 2px; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; padding: 3px; }
+  .unit-btn {
+    font-family: 'DM Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 100px;
+    border: none; background: none; color: var(--muted); cursor: pointer; transition: all 0.15s; letter-spacing: 0.5px;
+  }
+  .unit-btn.active { background: var(--surface); color: var(--text); }
+
+  /* MAIN */
+  main { max-width: 1200px; margin: 0 auto; padding: 40px 40px 80px; }
+  .row { display: grid; gap: 20px; margin-bottom: 20px; }
+  .row-2 { grid-template-columns: 1fr 1fr; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px; position: relative; overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+  .card.glow-y::before  { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:radial-gradient(circle,rgba(232,255,71,0.07) 0%,transparent 70%); pointer-events:none; }
+  .card.glow-p::before  { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:radial-gradient(circle,rgba(192,132,252,0.07) 0%,transparent 70%); pointer-events:none; }
+
+  .card-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  .dot.fitbod { background: var(--red); }
+  .dot.health { background: var(--blue); }
+  .dot.cal    { background: var(--purple); }
+
+  /* SCORE */
+  .score-inner { display:flex; align-items:center; gap:32px; }
+  .score-ring  { position:relative; width:120px; height:120px; flex-shrink:0; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .ring-num    { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-num span:first-child { font-family:'Bebas Neue',sans-serif; font-size:40px; line-height:1; color:var(--accent); }
+  .ring-num span:last-child  { font-size:10px; color:var(--muted); letter-spacing:1px; }
+  .score-right { flex:1; }
+  .score-grade   { font-family:'Bebas Neue',sans-serif; font-size:30px; line-height:1; margin-bottom:6px; }
+  .score-insight { font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:18px; }
+  .sub-scores    { display:flex; flex-direction:column; gap:9px; }
+  .sub-score     { display:flex; align-items:center; gap:10px; }
+  .sub-label     { font-size:11px; color:var(--muted); width:84px; flex-shrink:0; }
+  .sub-bar       { flex:1; height:3px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+  .sub-fill      { height:100%; border-radius:2px; transition:width 1.3s cubic-bezier(0.16,1,0.3,1); }
+  .sub-val       { font-family:'DM Mono',monospace; font-size:12px; width:26px; text-align:right; }
+
+  /* WORKOUT */
+  .wo-title { font-family:'Bebas Neue',sans-serif; font-size:26px; margin-bottom:4px; }
+  .wo-meta  { font-size:12px; color:var(--muted); margin-bottom:20px; }
+  .ex-list  { display:flex; flex-direction:column; gap:8px; }
+  .ex-row   { display:flex; align-items:center; gap:10px; padding:9px 12px; background:var(--surface2); border-radius:10px; border:1px solid var(--border); }
+  .ex-icon  { width:28px; height:28px; border-radius:7px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+  .ex-name  { flex:1; font-size:13px; font-weight:500; }
+  .ex-sets  { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+  .pr-badge { font-size:9px; letter-spacing:1px; background:rgba(61,255,160,0.12); color:var(--green); padding:2px 7px; border-radius:100px; }
+  .no-workout { font-size:13px; color:var(--muted); line-height:1.7; padding:16px 0; }
+
+  /* WEIGHT */
+  .metric-hero { display:flex; align-items:baseline; gap:8px; margin-bottom:4px; }
+  .metric-big  { font-family:'Bebas Neue',sans-serif; font-size:52px; line-height:1; }
+  .metric-unit { font-size:14px; color:var(--muted); font-weight:300; }
+  .metric-sub  { font-family:'DM Mono',monospace; font-size:11px; margin-bottom:18px; }
+  .metric-sub.down { color:var(--green); }
+  .metric-sub.up   { color:var(--red); }
+  .metric-sub.neutral { color:var(--muted); }
+  .sparkline { width:100%; }
+  .chart-axis { display:flex; justify-content:space-between; margin-top:6px; }
+  .chart-axis span { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+
+  /* STEPS */
+  .steps-status {
+    margin-bottom: 16px; padding: 12px 16px;
+    border-radius: 10px; background: var(--surface2);
+    border: 1px solid var(--border);
+    font-size: 12px; line-height: 1.6; color: var(--text);
+    border-left-width: 3px;
+  }
+  .steps-status.good   { border-left-color: var(--green); }
+  .steps-status.ok     { border-left-color: var(--accent); }
+  .steps-status.push   { border-left-color: var(--red); }
+
+  .prog-row   { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .prog-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); white-space:nowrap; }
+  .prog-track { flex:1; height:3px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+  .prog-fill  { height:3px; background:var(--accent); border-radius:2px; transition:width 1.3s cubic-bezier(0.16,1,0.3,1); }
+  .prog-pct   { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); width:32px; text-align:right; }
+
+  .week-bars { display:flex; align-items:flex-end; gap:6px; height:60px; }
+  .week-col  { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; height:100%; }
+  .week-bar-wrap { flex:1; width:100%; display:flex; align-items:flex-end; }
+  .week-bar  { width:100%; border-radius:3px 3px 0 0; transition:height 1.2s cubic-bezier(0.16,1,0.3,1); opacity:0.3; background:var(--accent); }
+  .week-bar.today { opacity:1; }
+  .week-day  { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+
+  /* CYCLE */
+  .cycle-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  .cy-val   { font-family:'Bebas Neue',sans-serif; font-size:36px; line-height:1; margin-bottom:3px; }
+  .cy-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
+
+  .phase-bar { display:flex; height:6px; border-radius:3px; overflow:hidden; gap:2px; margin-bottom:12px; }
+  .phase-seg { border-radius:3px; }
+  .phase-seg.menstrual  { background:#e05c5c; }
+  .phase-seg.follicular { background:var(--accent); }
+  .phase-seg.ovulation  { background:var(--green); }
+  .phase-seg.luteal     { background:var(--blue); }
+  .phase-seg.active     { outline:2px solid white; outline-offset:1px; }
+
+  .phase-legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:20px; }
+  .phase-item   { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--muted); }
+  .phase-dot    { width:6px; height:6px; border-radius:50%; }
+
+  .training-rec       { background:var(--surface2); border-left:2px solid var(--purple); border-radius:0 8px 8px 0; padding:12px 16px; }
+  .training-rec-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+  .training-rec-text  { font-size:12px; color:var(--text); line-height:1.7; }
+
+  .data-notice { margin-top:14px; font-size:11px; color:var(--muted); padding:10px 14px; border:1px dashed rgba(255,255,255,0.1); border-radius:8px; display:flex; align-items:center; gap:8px; }
+
+  .no-cycle { font-size:13px; color:var(--muted); line-height:1.7; padding:8px 0; }
+
+  /* STRENGTH */
+  .lift-tabs { display:flex; gap:0; margin-bottom:24px; border-bottom:1px solid var(--border); overflow-x:auto; }
+  .lift-tab  { font-family:'DM Mono',monospace; font-size:11px; padding:8px 18px; background:none; border:none; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:color 0.15s; }
+  .lift-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .lift-view { display:none; }
+  .lift-view.active { display:block; }
+
+  .lift-pr-row   { display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .lift-pr-val   { font-family:'Bebas Neue',sans-serif; font-size:48px; line-height:1; }
+  .lift-pr-unit  { font-size:14px; color:var(--muted); }
+  .lift-pr-chg   { font-family:'DM Mono',monospace; font-size:11px; color:var(--green); margin-left:auto; }
+  .lift-pr-date  { font-size:11px; color:var(--muted); margin-bottom:22px; }
+
+  .vol-bars { display:flex; align-items:flex-end; gap:6px; height:80px; }
+  .vol-col  { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; height:100%; }
+  .vol-wrap { flex:1; width:100%; display:flex; align-items:flex-end; }
+  .vol-bar  { width:100%; border-radius:3px 3px 0 0; background:var(--surface2); border:1px solid var(--border); transition:height 1.2s cubic-bezier(0.16,1,0.3,1); }
+  .vol-bar.latest { background:rgba(232,255,71,0.25); border-color:rgba(232,255,71,0.4); }
+  .vol-bar.is-pr  { background:rgba(61,255,160,0.25); border-color:rgba(61,255,160,0.5); }
+  .vol-date { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+
+  .no-lifts { font-size:13px; color:var(--muted); line-height:1.7; padding:12px 0; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+
+  @media (max-width:860px) {
+    header { padding:16px 20px; }
+    main   { padding:24px 20px 60px; }
+    .row-2 { grid-template-columns:1fr; }
+    .header-date { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">FORM</div>
+  <div class="header-date" id="headerDate"></div>
+  <div class="header-right">
+    <div class="unit-toggle">
+      <button class="unit-btn active" data-unit="kg">kg</button>
+      <button class="unit-btn" data-unit="lbs">lbs</button>
+      <button class="unit-btn" data-unit="stone">stone</button>
+    </div>
+    <div class="header-pill" id="cyclePill" style="display:none">
+      <span class="pill-label">Cycle</span>
+      <span class="pill-val cycle" id="cycleHeader">—</span>
+    </div>
+    <div class="header-pill">
+      <span class="pill-label">Score</span>
+      <span class="pill-val" id="headerScore">—</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="row row-2" style="margin-bottom:20px">
+    <div class="card glow-y" style="animation-delay:0s">
+      <div class="card-label"><span class="dot"></span>Daily Score</div>
+      <div class="score-inner">
+        <div class="score-ring">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+            <circle id="scoreArc" cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314"
+              style="filter:drop-shadow(0 0 6px rgba(232,255,71,0.5));transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
+          </svg>
+          <div class="ring-num"><span id="scoreNum">—</span><span>/100</span></div>
+        </div>
+        <div class="score-right">
+          <div class="score-grade" id="scoreGrade">—</div>
+          <div class="score-insight" id="scoreInsight">—</div>
+          <div class="sub-scores" id="subScores"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="animation-delay:0.06s">
+      <div class="card-label"><span class="dot fitbod"></span>Today · Fitbod</div>
+      <div id="workoutArea"></div>
+    </div>
+  </div>
+
+  <div class="row row-2" style="margin-bottom:20px">
+    <div class="card" style="animation-delay:0.12s">
+      <div class="card-label"><span class="dot health"></span>Weight · Apple Health</div>
+      <div id="weightArea"></div>
+    </div>
+
+    <div class="card" style="animation-delay:0.18s">
+      <div class="card-label"><span class="dot health"></span>Steps · Apple Health</div>
+      <div id="stepsArea"></div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:20px">
+    <div class="card glow-p" style="animation-delay:0.24s">
+      <div class="card-label"><span class="dot cal"></span>Cycle · Apple Calendar</div>
+      <div id="cycleArea"></div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:0">
+    <div class="card" style="animation-delay:0.30s">
+      <div class="card-label"><span class="dot fitbod"></span>Strength Progression · Fitbod</div>
+      <div id="strengthArea"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA SOURCE
+// When data.json exists (after running form-data.js),
+// it is loaded from iCloud. Otherwise falls back to
+// the SAMPLE_DATA below so the dashboard always renders.
+// ═══════════════════════════════════════════════════════
+
+const DATA_URL = ""; // set to your hosted data.json URL, or leave blank for sample
+
+const SAMPLE_DATA = {
+  score: {
+    value: 82, grade: "Good Form",
+    insight: "Strong push session today. Weight trending down. A short walk this evening will close your step goal.",
+    subs: [
+      { label:"Strength",    value:88, color:"var(--accent)"  },
+      { label:"Activity",    value:74, color:"var(--red)"     },
+      { label:"Consistency", value:83, color:"var(--green)"   },
+      { label:"Fat Loss",    value:78, color:"var(--blue)"    },
+    ]
+  },
+  workout: {
+    name:"Upper Body Push", duration:"52 min", calories:342,
+    exercises: [
+      { icon:"🏋️", name:"Barbell Bench Press",  sets:"4 × 6",  weight:"80 kg",  pr:true  },
+      { icon:"💪", name:"Incline DB Press",      sets:"3 × 10", weight:"27.5 kg",pr:false },
+      { icon:"🔺", name:"Overhead Press",        sets:"3 × 8",  weight:"52.5 kg",pr:true  },
+      { icon:"〰️", name:"Cable Lateral Raise",   sets:"3 × 15", weight:"9 kg",   pr:false },
+      { icon:"📐", name:"Tricep Pushdown",        sets:"3 × 12", weight:"25 kg",  pr:false },
+    ]
+  },
+  weight: {
+    currentKg: 68.4, currentLbs: 150.8, currentStone: "10st 10.8lb",
+    change: -0.8,
+    history: [
+      { date:"5 Apr",  val:70.1, valLbs:154.5, valStone:"11st 0.5lb" },
+      { date:"12 Apr", val:69.8, valLbs:153.9, valStone:"10st 13.9lb" },
+      { date:"19 Apr", val:69.5, valLbs:153.2, valStone:"10st 13.2lb" },
+      { date:"26 Apr", val:69.2, valLbs:152.6, valStone:"10st 12.6lb" },
+      { date:"3 May",  val:69.0, valLbs:152.1, valStone:"10st 12.1lb" },
+      { date:"10 May", val:68.9, valLbs:151.9, valStone:"10st 11.9lb" },
+      { date:"17 May", val:68.7, valLbs:151.5, valStone:"10st 11.5lb" },
+      { date:"25 May", val:68.4, valLbs:150.8, valStone:"10st 10.8lb" },
+    ]
+  },
+  steps: {
+    today:9241, week:[8400,11200,7600,9800,9241,0,0],
+    adjustedTarget:7000, baseTarget:10000, pct:100,
+    message:"Solid — today's 52 min session covers the rest. You're done.",
+    status:"good",
+  },
+  cycle: {
+    dayOfCycle:14, cycleLength:29, periodLength:5,
+    phase:"ovulation", onPeriod:false,
+    phases:{ menstrual:{start:1,end:5}, follicular:{start:6,end:12}, ovulation:{start:13,end:16}, luteal:{start:17,end:29} }
+  },
+  phaseRecs: {
+    menstrual:  "Energy and strength may be lower. Prioritise mobility, lighter loads, and recovery. Don't skip — but honour how you feel.",
+    follicular: "Oestrogen is rising — a good window for progressive overload and heavier lifts. Energy tends to be high.",
+    ovulation:  "Peak strength window. Oestrogen and testosterone are both elevated. Great time to push for PRs and high-intensity sessions.",
+    luteal:     "Progesterone rises here. Strength can feel slightly off later in this phase. Steady volume over max intensity.",
+  },
+  lifts: [
+    {
+      name:"Bench Press", pr:80, prUnit:"kg", prDate:"Today", prChange:"+2.5 kg this month",
+      sessions:[
+        {date:"3 Apr",volume:2800},{date:"10 Apr",volume:2960},{date:"17 Apr",volume:3100},
+        {date:"1 May",volume:3050},{date:"15 May",volume:3200},{date:"25 May",volume:3440,pr:true},
+      ]
+    },
+    {
+      name:"Overhead Press", pr:52.5, prUnit:"kg", prDate:"Today", prChange:"+5 kg this month",
+      sessions:[
+        {date:"3 Apr",volume:1600},{date:"10 Apr",volume:1650},{date:"17 Apr",volume:1700},
+        {date:"1 May",volume:1680},{date:"15 May",volume:1750},{date:"25 May",volume:1840,pr:true},
+      ]
+    },
+    {
+      name:"Incline Press", pr:27.5, prUnit:"kg", prDate:"17 May", prChange:"+2.5 kg this month",
+      sessions:[
+        {date:"3 Apr",volume:1400},{date:"10 Apr",volume:1440},{date:"17 Apr",volume:1500},
+        {date:"1 May",volume:1520},{date:"15 May",volume:1560},{date:"25 May",volume:1560},
+      ]
+    },
+  ]
+};
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+
+const DAYS = ['M','T','W','T','F','S','S'];
+const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+let currentUnit = 'kg';
+let DATA = null;
+
+async function loadData() {
+  if (DATA_URL) {
+    try {
+      const res = await fetch(DATA_URL + '?t=' + Date.now());
+      DATA = await res.json();
+    } catch(e) { DATA = SAMPLE_DATA; }
+  } else {
+    DATA = SAMPLE_DATA;
+  }
+}
+
+function render() {
+  document.getElementById('headerDate').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' }).toUpperCase();
+
+  renderScore();
+  renderWorkout();
+  renderWeight();
+  renderSteps();
+  renderCycle();
+  renderStrength();
+
+  setTimeout(animateBars, 80);
+}
+
+// ── Score ──
+function renderScore() {
+  const sc = DATA.score;
+  document.getElementById('headerScore').textContent = sc.value;
+  document.getElementById('scoreNum').textContent    = sc.value;
+  document.getElementById('scoreGrade').textContent  = sc.grade;
+  document.getElementById('scoreInsight').textContent = sc.insight;
+  setTimeout(() => {
+    document.getElementById('scoreArc').style.strokeDashoffset = 314 - (314 * sc.value / 100);
+  }, 100);
+  const subEl = document.getElementById('subScores');
+  subEl.innerHTML = '';
+  sc.subs.forEach(s => {
+    subEl.innerHTML += `
+      <div class="sub-score">
+        <span class="sub-label">${s.label}</span>
+        <div class="sub-bar"><div class="sub-fill" style="width:0%;background:${s.color}" data-w="${s.value}%"></div></div>
+        <span class="sub-val">${s.value}</span>
+      </div>`;
+  });
+}
+
+// ── Workout ──
+function renderWorkout() {
+  const el = document.getElementById('workoutArea');
+  const wo = DATA.workout;
+  if (!wo) {
+    el.innerHTML = `<div class="no-workout">No session logged yet today.<br>Complete a workout in Fitbod and run the data script to update.</div>`;
+    return;
+  }
+  const exRows = (wo.exercises || []).map(ex => `
+    <div class="ex-row">
+      <div class="ex-icon">${ex.icon || '💪'}</div>
+      <span class="ex-name">${ex.name}</span>
+      <span class="ex-sets">${ex.sets} · ${ex.weight}</span>
+      ${ex.pr ? '<span class="pr-badge">PR</span>' : ''}
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="wo-title">${wo.name}</div>
+    <div class="wo-meta">${wo.duration}${wo.calories ? ' · ' + wo.calories + ' kcal' : ''}</div>
+    <div class="ex-list">${exRows || '<div class="no-workout" style="margin:0">Exercise detail coming once Fitbod CSV export is set up.</div>'}</div>`;
+}
+
+// ── Weight ──
+function renderWeight() {
+  const wt  = DATA.weight;
+  const el  = document.getElementById('weightArea');
+  if (!wt) {
+    el.innerHTML = `<div class="no-workout">No weight data found in Apple Health.</div>`;
+    return;
+  }
+
+  const val = currentUnit === 'kg' ? wt.currentKg :
+              currentUnit === 'lbs' ? wt.currentLbs : wt.currentStone;
+  const unit = currentUnit;
+
+  const changeKg = wt.change;
+  const changeLbs  = Math.round(changeKg * 2.2046 * 10) / 10;
+  const changeDisp = currentUnit === 'kg' ? `${Math.abs(changeKg)} kg` :
+                     currentUnit === 'lbs' ? `${Math.abs(changeLbs)} lbs` :
+                     `${Math.abs(changeLbs)} lbs`;
+  const dir  = changeKg < 0 ? 'down' : 'up';
+  const sym  = changeKg < 0 ? '↓' : '↑';
+
+  // SVG line chart — always uses kg values internally
+  const pts  = wt.history;
+  const minV = Math.min(...pts.map(p=>p.val)) - 0.3;
+  const maxV = Math.max(...pts.map(p=>p.val)) + 0.3;
+  const W = 300, H = 70;
+  const tx = i => (i / (pts.length-1)) * W;
+  const ty = v => H - ((v - minV) / (maxV - minV)) * (H - 8) - 4;
+  const pathD = pts.map((p,i) => `${i===0?'M':'L'}${tx(i).toFixed(1)},${ty(p.val).toFixed(1)}`).join(' ');
+  const areaD = pathD + ` L${tx(pts.length-1)},${H} L0,${H} Z`;
+
+  el.innerHTML = `
+    <div class="metric-hero">
+      <span class="metric-big">${val}</span>
+      <span class="metric-unit">${unit === 'stone' ? '' : unit}</span>
+    </div>
+    <div class="metric-sub ${dir}">${sym} ${changeDisp} over 4 weeks</div>
+    <svg class="sparkline" id="weightChart" height="70" viewBox="0 0 300 70" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--blue)" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="var(--blue)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaD}" fill="url(#wg)"/>
+      <path d="${pathD}" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${tx(pts.length-1)}" cy="${ty(pts[pts.length-1].val)}" r="3" fill="var(--blue)"/>
+    </svg>
+    <div class="chart-axis"><span>${pts[0].date}</span><span>${pts[pts.length-1].date}</span></div>`;
+}
+
+// ── Steps ──
+function renderSteps() {
+  const st = DATA.steps;
+  const el = document.getElementById('stepsArea');
+
+  el.innerHTML = `
+    <div class="metric-hero">
+      <span class="metric-big">${st.today.toLocaleString()}</span>
+      <span class="metric-unit">steps</span>
+    </div>
+    <div class="steps-status ${st.status}">${st.message}</div>
+    <div class="prog-row">
+      <span class="prog-label">${st.adjustedTarget.toLocaleString()} target</span>
+      <div class="prog-track"><div class="prog-fill" id="stepsProg" style="width:0%" data-w="${st.pct}%"></div></div>
+      <span class="prog-pct">${st.pct}%</span>
+    </div>
+    <div class="week-bars" id="weekBars"></div>`;
+
+  const maxSt = Math.max(...st.week.filter(v=>v>0), 1);
+  st.week.forEach((v, i) => {
+    const h = v > 0 ? Math.round((v / maxSt) * 100) : 0;
+    const col = document.createElement('div');
+    col.className = 'week-col';
+    col.innerHTML = `
+      <div class="week-bar-wrap">
+        <div class="week-bar${i===todayIdx?' today':''}" style="height:0%" data-h="${h}%"></div>
+      </div>
+      <span class="week-day">${DAYS[i]}</span>`;
+    document.getElementById('weekBars').appendChild(col);
+  });
+}
+
+// ── Cycle ──
+function renderCycle() {
+  const cy = DATA.cycle;
+  const el = document.getElementById('cycleArea');
+
+  if (!cy) {
+    el.innerHTML = `<div class="no-cycle">No 🩸 events found in Apple Calendar yet.<br>Run the data script after adding period events to see your cycle tracking here.</div>`;
+    return;
+  }
+
+  // Show cycle pill in header
+  document.getElementById('cyclePill').style.display = 'flex';
+  document.getElementById('cycleHeader').textContent = cy.onPeriod
+    ? `Day ${cy.dayOfCycle} 🩸` : `Day ${cy.dayOfCycle} · ${cy.phase}`;
+
+  const phaseOrder = ['menstrual','follicular','ovulation','luteal'];
+  const phaseSegs  = phaseOrder.map(ph => {
+    const r = cy.phases[ph];
+    const len    = r.end - r.start + 1;
+    const active = ph === cy.phase ? ' active' : '';
+    return `<div class="phase-seg ${ph}${active}" style="flex:${len}"></div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="cycle-stats">
+      <div><div class="cy-val">Day ${cy.dayOfCycle}</div><div class="cy-label">Current Day</div></div>
+      <div><div class="cy-val">${cy.cycleLength}d</div><div class="cy-label">Avg Cycle</div></div>
+      <div><div class="cy-val">${cy.periodLength}d</div><div class="cy-label">Avg Period</div></div>
+    </div>
+    <div class="phase-bar">${phaseSegs}</div>
+    <div class="phase-legend">
+      <div class="phase-item"><div class="phase-dot" style="background:#e05c5c"></div>Menstrual</div>
+      <div class="phase-item"><div class="phase-dot" style="background:var(--accent)"></div>Follicular</div>
+      <div class="phase-item"><div class="phase-dot" style="background:var(--green)"></div>Ovulation</div>
+      <div class="phase-item"><div class="phase-dot" style="background:var(--blue)"></div>Luteal</div>
+    </div>
+    <div class="training-rec">
+      <div class="training-rec-label">Training Recommendation</div>
+      <div class="training-rec-text">${DATA.phaseRecs[cy.phase]}</div>
+    </div>
+    <div class="data-notice">◌ &nbsp;Personalised insights will appear once a few months of cycle data have been collected.</div>`;
+}
+
+// ── Strength ──
+function renderStrength() {
+  const el = document.getElementById('strengthArea');
+  if (!DATA.lifts || !DATA.lifts.length) {
+    el.innerHTML = `
+      <div class="no-lifts">
+        Lift history will appear here once populated.<br>
+        You can add sessions manually in the DATA config inside <code>form-data.js</code>,
+        or export your Fitbod workout history CSV and import it.
+      </div>`;
+    return;
+  }
+
+  const tabsHTML = DATA.lifts.map((l,i) =>
+    `<button class="lift-tab${i===0?' active':''}" data-idx="${i}">${l.name}</button>`
+  ).join('');
+
+  const viewsHTML = DATA.lifts.map((lift, idx) => {
+    const maxVol = Math.max(...lift.sessions.map(s=>s.volume));
+    const bars   = lift.sessions.map((s,i) => {
+      const h   = Math.round((s.volume / maxVol) * 100);
+      const cls = s.pr ? 'is-pr' : (i===lift.sessions.length-1 ? 'latest' : '');
+      return `<div class="vol-col">
+        <div class="vol-wrap"><div class="vol-bar ${cls}" style="height:0%" data-h="${h}%"></div></div>
+        <span class="vol-date">${s.date}</span>
+      </div>`;
+    }).join('');
+    return `<div class="lift-view${idx===0?' active':''}">
+      <div class="lift-pr-row">
+        <span class="lift-pr-val">${lift.pr}</span>
+        <span class="lift-pr-unit">${lift.prUnit}</span>
+        <span class="lift-pr-chg">↑ ${lift.prChange}</span>
+      </div>
+      <div class="lift-pr-date">PR set ${lift.prDate}</div>
+      <div class="vol-bars">${bars}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div class="lift-tabs" id="liftTabs">${tabsHTML}</div><div id="liftViews">${viewsHTML}</div>`;
+
+  document.getElementById('liftTabs').addEventListener('click', e => {
+    const t = e.target.closest('.lift-tab');
+    if (!t) return;
+    document.querySelectorAll('.lift-tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.lift-view').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.lift-view')[t.dataset.idx].classList.add('active');
+    animateBars();
+  });
+}
+
+// ── Animate all bars ──
+function animateBars() {
+  setTimeout(() => {
+    document.querySelectorAll('[data-w]').forEach(el => el.style.width  = el.dataset.w);
+    document.querySelectorAll('[data-h]').forEach(el => el.style.height = el.dataset.h);
+  }, 40);
+}
+
+// ── Weight unit toggle ──
+document.querySelectorAll('.unit-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentUnit = btn.dataset.unit;
+    renderWeight();
+    animateBars();
+  });
+});
+
+// ── Init ──
+loadData().then(render);
+</script>
+</body>
+</html>

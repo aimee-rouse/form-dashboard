@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-31T17:59:58.079Z",
+  "generatedAt": "2026-05-31T18:09:05.735Z",
   "score": {
     "value": 9,
     "grade": "Rest Up",
@@ -44,16 +44,16 @@
   "cycle": {
     "dayOfCycle": 13,
     "cycleLength": 36,
-    "periodLength": 2,
+    "periodLength": 4,
     "phase": "follicular",
     "onPeriod": false,
     "phases": {
       "menstrual": {
         "start": 1,
-        "end": 2
+        "end": 4
       },
       "follicular": {
-        "start": 3,
+        "start": 5,
         "end": 20
       },
       "ovulation": {
